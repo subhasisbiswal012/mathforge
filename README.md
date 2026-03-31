@@ -12,7 +12,7 @@ No backend. No sign-up. No tracking. Just open `index.html` in any browser and s
 
 ## 🌐 Live Demo
 
-👉 **[mathforge.github.io/mathforge](https://mathforge.github.io/mathforge)** _(update once published)_
+👉 **[mathforge.github.io/mathforge]([https://mathforge.github.io/mathforge](https://subhasisbiswal012.github.io/mathforge/))** _(update once published)_
 
 ---
 
