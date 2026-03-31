@@ -8,15 +8,49 @@
  *   sounds/good.mp3       → 90–94%
  *   sounds/okay.mp3       → 85–89%
  *   sounds/meh.mp3        → 80–84%
- *   sounds/bad_1.mp3      → below 80% (random pick from bad_1 to bad_4)
- *   sounds/bad_2.mp3
+ *   sounds/bad_1.mp3      → below 80% (one picked randomly from all bad_*.mp3 files)
+ *   sounds/bad_2.mp3      Add as many bad_N.mp3 as you want — just update BAD_SOUNDS below.
  *   sounds/bad_3.mp3
  *   sounds/bad_4.mp3
+ *   sounds/bad_5.mp3
+ *   sounds/bad_6.mp3
+ *   sounds/bad_7.mp3
+ *   sounds/bad_8.mp3
+ *   sounds/bad_9.mp3
  */
 'use strict';
 
 let _fullResults      = [];
 let _currentSoundFile = null; // remembered so the replay button can reuse it
+
+/* ── Bad sounds loaded dynamically from sounds/manifest.json ──
+   To add a new bad sound:
+     1. Drop the file into the sounds/ folder (e.g. bad_10.mp3)
+     2. Add its filename to sounds/manifest.json under "bad"
+     3. Done — no code changes needed here.
+─────────────────────────────────────────────────────────── */
+let BAD_SOUNDS = []; // populated at startup by loadSoundManifest()
+
+/**
+ * Fetch sounds/manifest.json and populate BAD_SOUNDS.
+ * Called once when the page loads.
+ */
+function loadSoundManifest() {
+  fetch('sounds/manifest.json')
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      BAD_SOUNDS = (data.bad || []).map(function(f) {
+        return 'sounds/' + f;
+      });
+    })
+    .catch(function() {
+      // manifest missing or fetch failed — silently continue with no bad sounds
+      BAD_SOUNDS = [];
+    });
+}
+
+// Load manifest immediately when script runs
+loadSoundManifest();
 
 /* ── Funny quotes by score bracket ──────────────────────── */
 const QUOTES = {
@@ -77,8 +111,10 @@ function getSoundFile(pct) {
   if (pct >= 90)   return 'sounds/good.mp3';
   if (pct >= 85)   return 'sounds/okay.mp3';
   if (pct >= 80)   return 'sounds/meh.mp3';
-  const n = Math.floor(Math.random() * 4) + 1;
-  return `sounds/bad_${n}.mp3`;
+  // Pick randomly from however many files are listed in sounds/manifest.json
+  if (BAD_SOUNDS.length === 0) return null;
+  var idx = Math.floor(Math.random() * BAD_SOUNDS.length);
+  return BAD_SOUNDS[idx];
 }
 
 /**
