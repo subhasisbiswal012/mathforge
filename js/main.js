@@ -17,14 +17,23 @@ const AppState = {
   examRunning:   false,
 };
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && AppState.examRunning) {
-    const inp = document.getElementById('answerInput');
-    if (inp && !inp.disabled && !document.getElementById('inputWrap').classList.contains('hidden')) {
-      submitAnswer();
-    }
+function handleEnterKey() {
+  if (!AppState.examRunning) return;
+  const inp = document.getElementById('answerInput');
+  if (inp && !inp.disabled && !document.getElementById('inputWrap').classList.contains('hidden')) {
+    submitAnswer();
   }
+}
+
+// keydown covers desktop Enter
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleEnterKey();
   if (e.key === 'Escape' && !AppState.examRunning) showHome();
+});
+
+// keyup covers mobile virtual keyboard "Done/Go" button
+document.addEventListener('keyup', e => {
+  if (e.key === 'Enter') handleEnterKey();
 });
 
 function init() {
