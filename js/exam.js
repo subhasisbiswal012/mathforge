@@ -18,11 +18,39 @@ function startExam() {
   AppState.examRunning = true;
 
   AppState.questions = [];
+
+  // Deduplication: avoid the same question appearing consecutively.
+  // For small pools, we allow a short cooldown window (last 3 questions).
+  // If after 5 attempts we still get a duplicate, we accept it to avoid infinite loops.
+  const COOLDOWN = 3;   // how many recent questions to check against
+  const MAX_TRIES = 5;  // max generation attempts before giving up on dedup
+
+  function generateUnique(topic, recentAnswers) {
+    for (let attempt = 0; attempt < MAX_TRIES; attempt++) {
+      const q = topic.generate();
+      if (!recentAnswers.includes(q.answer + '|' + q.question)) return q;
+    }
+    return topic.generate(); // fallback after max tries
+  }
+
   if (AppState.currentTopic === 'random') {
-    for (let i = 0; i < totalQ; i++) AppState.questions.push(pick(TOPICS).generate());
+    const recentAnswers = [];
+    for (let i = 0; i < totalQ; i++) {
+      const topic = pick(TOPICS);
+      const q = generateUnique(topic, recentAnswers);
+      AppState.questions.push(q);
+      recentAnswers.push(q.answer + '|' + q.question);
+      if (recentAnswers.length > COOLDOWN) recentAnswers.shift();
+    }
   } else {
     const topic = TOPICS.find(t => t.id === AppState.currentTopic);
-    for (let i = 0; i < totalQ; i++) AppState.questions.push(topic.generate());
+    const recentAnswers = [];
+    for (let i = 0; i < totalQ; i++) {
+      const q = generateUnique(topic, recentAnswers);
+      AppState.questions.push(q);
+      recentAnswers.push(q.answer + '|' + q.question);
+      if (recentAnswers.length > COOLDOWN) recentAnswers.shift();
+    }
   }
 
   showScreen('exam');
@@ -48,6 +76,7 @@ function loadQuestion() {
     document.getElementById('mcqWrap').classList.add('hidden');
     const inp = document.getElementById('answerInput');
     inp.value = ''; inp.className = 'answer-input'; inp.disabled = false;
+    inp.setAttribute('enterkeyhint', 'done');  // Shows "Done/Go" on mobile keyboard
     inp.focus();
   } else {
     document.getElementById('inputWrap').classList.add('hidden');
@@ -155,11 +184,19 @@ function handleTimeout() {
   if (q.type === 'mcq') {
     AppState.mcqAnswered = true;
     document.querySelectorAll('.mcq-btn').forEach(b => b.disabled = true);
+    recordResult(q, '', 'timeout');
   } else {
-    document.getElementById('answerInput').disabled = true;
+    const inp = document.getElementById('answerInput');
+    const typed = inp.value.trim();
+    inp.disabled = true;
+    if (typed) {
+      // Use whatever the user typed as the answer instead of blank
+      recordResult(q, typed, checkAnswer(typed, q) ? 'correct' : 'timeout');
+    } else {
+      recordResult(q, '', 'timeout');
+    }
   }
-  recordResult(q, '', 'timeout');
-  nextQuestion();          // ← instant on timeout too
+  nextQuestion();
 }
 
 function retryExam() { startExam(); }
