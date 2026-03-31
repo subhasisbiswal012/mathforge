@@ -33,12 +33,12 @@ const LEARN_TOPICS = [
   /* ── MULTIPLICATION TABLES ────────────────────────────── */
   {
     id: 'multiplication', label: 'Multiplication Tables', icon: '×', color: '#065F46',
-    desc: 'Tables 2 to 30 — complete reference with verbal reading guide.',
+    desc: 'Tables 2 to 30 × 1 to 30 — complete reference with verbal reading guide.',
     buildContent() {
       const tables = [];
       for (let t = 2; t <= 30; t++) {
         const rows = [];
-        for (let m = 1; m <= 10; m++) rows.push([`${m} × ${t}`, `<span class="val">${m * t}</span>`]);
+        for (let m = 1; m <= 30; m++) rows.push([`${m} × ${t}`, `<span class="val">${m * t}</span>`]);
         tables.push(`<div class="notes-section">
           <h3>Table of ${t}</h3>
           ${makeTable([`n × ${t}`, 'Result'], rows, ['key', 'val'])}
